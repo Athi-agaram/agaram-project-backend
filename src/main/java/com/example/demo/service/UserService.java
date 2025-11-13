@@ -78,4 +78,26 @@ public class UserService {
     public List<Map<String, Object>> getUsersInSameTeam(String username) {
         return userRepository.findUsersInSameTeam(username);
     }
+ // ------------------ EDIT PROFILE ------------------
+    public int editUserProfile(int id, String newUsername, String teamName, String role) {
+        Integer teamId = null;
+        if (teamName != null && !teamName.trim().isEmpty()) {
+            teamId = userRepository.findOrCreateTeamId(teamName);
+        }
+        return userRepository.updateUserProfile(id, newUsername, teamId, role);
+    }
+
+    // ------------------ CHANGE PASSWORD ------------------
+    public boolean changePassword(int id, String currentPassword, String newPassword) {
+        Map<String, Object> user = userRepository.findById(id);
+        if (user == null) return false;
+
+        String dbPassword = (String) user.get("password");
+        if (!dbPassword.equals(currentPassword)) {
+            return false; // old password incorrect
+        }
+
+        return userRepository.updatePassword(id, newPassword) > 0;
+    }
+
 }

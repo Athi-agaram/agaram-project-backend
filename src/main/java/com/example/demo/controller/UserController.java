@@ -14,23 +14,27 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    // ------------------ LOGIN ------------------
+    // ✅ Login
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody Map<String, String> credentials) {
         String username = credentials.get("username");
         String password = credentials.get("password");
 
         Map<String, Object> user = userService.getUserByUsername(username);
-        if (user == null) throw new RuntimeException("User not found");
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
 
         String dbPassword = (String) user.get("password");
-        if (!dbPassword.equals(password)) throw new RuntimeException("Invalid password");
+        if (!dbPassword.equals(password)) {
+            throw new RuntimeException("Invalid password");
+        }
 
         user.remove("password");
         return user;
     }
 
-    // ------------------ REGISTER ------------------
+    // ✅ Register
     @PostMapping("/register")
     public String registerUser(@RequestBody Map<String, String> body) {
         String username = body.get("username");
@@ -39,6 +43,13 @@ public class UserController {
         int result = userService.registerNewUser(username, password);
         return result > 0 ? "User registered successfully" : "Failed to register user";
     }
+
+    @GetMapping("/check-username")
+    public boolean checkUsernameExists(@RequestParam String username) {
+        Map<String, Object> user = userService.getUserByUsername(username);
+        return user != null;
+    }
+
 
     // ------------------ GET ALL USERS ------------------
     @GetMapping("/all")
@@ -80,4 +91,25 @@ public class UserController {
     public List<Map<String, Object>> getTeamMembers(@RequestParam String username) {
         return userService.getUsersInSameTeam(username);
     }
+ // ------------------ EDIT PROFILE ------------------
+    @PutMapping("/edit-profile/{id}")
+    public String editProfile(@PathVariable int id, @RequestBody Map<String, String> body) {
+        String newUsername = body.get("username");
+        String teamName = body.get("teamName");
+        String role = body.get("role");
+
+        int result = userService.editUserProfile(id, newUsername, teamName, role);
+        return result > 0 ? "Profile updated successfully" : "Failed to update profile";
+    }
+
+    // ------------------ CHANGE PASSWORD ------------------
+    @PutMapping("/change-password/{id}")
+    public String changePassword(@PathVariable int id, @RequestBody Map<String, String> body) {
+        String currentPassword = body.get("currentPassword");
+        String newPassword = body.get("newPassword");
+
+        boolean success = userService.changePassword(id, currentPassword, newPassword);
+        return success ? "Password updated successfully" : "Incorrect current password";
+    }
+
 }

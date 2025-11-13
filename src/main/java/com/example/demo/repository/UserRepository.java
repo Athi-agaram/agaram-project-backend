@@ -99,7 +99,7 @@ public class UserRepository {
     // ========================
     public Map<String, Object> findById(int id) {
         String sql = """
-            SELECT u.id, u.username, u.role, u.team_id, u.authorized,
+            SELECT u.id, u.username, u.password, u.role, u.team_id, u.authorized,
                    COALESCE(t.team_name,'') AS team_name
             FROM users u
             LEFT JOIN teams t ON u.team_id = t.id
@@ -108,6 +108,7 @@ public class UserRepository {
         List<Map<String,Object>> result = jdbcTemplate.queryForList(sql, id);
         return result.isEmpty() ? null : result.get(0);
     }
+
 
     // ========================
     // ✅ Find user by username
@@ -186,4 +187,33 @@ public class UserRepository {
         String sql = "SELECT id, team_name FROM teams";
         return jdbcTemplate.queryForList(sql);
     }
+ // ------------------ UPDATE PROFILE ------------------
+    public int updateUserProfile(int id, String username, Integer teamId, String role) {
+        StringBuilder sql = new StringBuilder("UPDATE users SET ");
+        boolean first = true;
+
+        if (username != null && !username.trim().isEmpty()) {
+            sql.append("username = '").append(username.replace("'", "''")).append("'");
+            first = false;
+        }
+        if (teamId != null) {
+            if (!first) sql.append(", ");
+            sql.append("team_id = ").append(teamId);
+            first = false;
+        }
+        if (role != null && !role.trim().isEmpty()) {
+            if (!first) sql.append(", ");
+            sql.append("role = '").append(role.replace("'", "''")).append("'");
+        }
+
+        sql.append(" WHERE id = ").append(id);
+        return jdbcTemplate.update(sql.toString());
+    }
+
+    // ------------------ UPDATE PASSWORD ------------------
+    public int updatePassword(int id, String newPassword) {
+        String sql = "UPDATE users SET password = ? WHERE id = ?";
+        return jdbcTemplate.update(sql, newPassword, id);
+    }
+
 }
